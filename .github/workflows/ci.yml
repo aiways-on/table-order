@@ -1,0 +1,154 @@
+name: CI and GHCR Publish
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  backend-test:
+    name: Backend Test (Python 3.12)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: backend/pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "./backend[dev]"
+
+      - name: Run pytest with coverage
+        working-directory: backend
+        run: |
+          pytest --cov=app --cov-report=term-missing
+
+  frontend-admin-test:
+    name: Frontend Admin Test & Build (Node 20)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend-admin/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend-admin
+        run: npm ci
+
+      - name: Run vitest
+        working-directory: frontend-admin
+        run: npm run test -- --run
+
+      - name: Build assets
+        working-directory: frontend-admin
+        run: npm run build
+
+  frontend-customer-test:
+    name: Frontend Customer Test & Build (Node 20)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend-customer/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend-customer
+        run: npm ci
+
+      - name: Run vitest
+        working-directory: frontend-customer
+        run: npm run test -- --run
+
+      - name: Build assets
+        working-directory: frontend-customer
+        run: npm run build
+
+  build-and-push-ghcr:
+    name: Build & Push GHCR Images
+    needs:
+      - backend-test
+      - frontend-admin-test
+      - frontend-customer-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: backend
+            context: ./backend
+            image: ghcr.io/${{ github.repository }}/backend
+          - name: frontend-admin
+            context: ./frontend-admin
+            image: ghcr.io/${{ github.repository }}/frontend-admin
+          - name: frontend-customer
+            context: ./frontend-customer
+            image: ghcr.io/${{ github.repository }}/frontend-customer
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        if: github.event_name != 'pull_request'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ matrix.image }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push container image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
