@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>테이블오더 — 실행 계획 요약 (Workflow Planning)</title>
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+    color:#1e293b;background:#f1f5f9;line-height:1.6;}
+  header{background:linear-gradient(135deg,#6366f1,#0ea5e9);color:#fff;padding:40px 24px;}
+  header .wrap{max-width:1000px;margin:0 auto;}
+  header h1{margin:0 0 6px;font-size:27px;}
+  header p{margin:0;opacity:.92;}
+  header .sub{margin-top:14px;font-size:13px;opacity:.85;}
+  main{max-width:1000px;margin:-22px auto 48px;padding:0 24px;}
+  section{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:24px 28px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+  h2{font-size:20px;margin:0 0 18px;padding-bottom:8px;border-bottom:2px solid #e2e8f0;}
+  /* risk cards */
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  @media(max-width:680px){.cards{grid-template-columns:1fr;}}
+  .card{border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;background:#fafcff;}
+  .card .k{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8;}
+  .card .v{font-size:20px;font-weight:700;margin-top:4px;}
+  .v.med{color:#d97706;} .v.easy{color:#15803d;} .v.cplx{color:#b91c1c;}
+  /* phase flow */
+  .phase{margin-bottom:24px;}
+  .phase .ptitle{font-weight:700;font-size:15px;margin-bottom:10px;}
+  .stages{display:flex;flex-wrap:wrap;gap:8px;}
+  .stg{border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;border:1px solid transparent;}
+  .done{background:#dcfce7;color:#15803d;border-color:#bbf7d0;}
+  .exec{background:#ffedd5;color:#c2410c;border-color:#fed7aa;}
+  .skip{background:#e2e8f0;color:#64748b;border-color:#cbd5e1;text-decoration:line-through;}
+  .plan{background:#e0f2fe;color:#0369a1;border-color:#bae6fd;}
+  .stg .badge{display:block;font-size:10px;font-weight:700;opacity:.75;margin-top:2px;}
+  /* units */
+  .units{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+  @media(max-width:680px){.units{grid-template-columns:1fr;}}
+  .unit{border:1px solid #e2e8f0;border-radius:10px;padding:12px 15px;background:#fafcff;}
+  .unit .un{font-family:ui-monospace,Menlo,monospace;font-size:13px;font-weight:700;color:#4f46e5;}
+  .unit .ud{font-size:12.5px;color:#475569;margin-top:3px;}
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top;}
+  th{color:#64748b;font-weight:600;background:#f8fafc;}
+  .tag{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:6px;}
+  .t-na{background:#e2e8f0;color:#475569;} .t-part{background:#fef9c3;color:#a16207;}
+  ul.crit{margin:6px 0 0;padding-left:20px;} ul.crit li{font-size:13.5px;margin:3px 0;}
+  .legend{font-size:12px;color:#64748b;margin-top:12px;}
+  .lg{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:middle;margin:0 4px 0 10px;}
+  footer{max-width:1000px;margin:0 auto 40px;padding:0 24px;color:#64748b;font-size:12px;text-align:center;}
+  code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:12px;}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>📋 테이블오더 — 실행 계획 요약</h1>
+    <p>Workflow Planning: 실행/건너뛸 단계 · 위험 평가 · 작업 단위 · 성공 기준</p>
+    <div class="sub">AI-DLC INCEPTION · Workflow Planning 단계 · 2026-09-08 · Greenfield · 승인 대기 중</div>
+  </div>
+</header>
+
+<main>
+  <!-- 1. 개요 & 위험 -->
+  <section>
+    <h2>1. 개요 및 위험 평가</h2>
+    <div class="cards">
+      <div class="card"><div class="k">위험 수준</div><div class="v med">Medium</div></div>
+      <div class="card"><div class="k">롤백 복잡도</div><div class="v easy">Easy</div></div>
+      <div class="card"><div class="k">테스트 복잡도</div><div class="v cplx">Complex</div></div>
+    </div>
+    <ul class="crit" style="margin-top:16px">
+      <li><b>User-facing</b>: 고객 태블릿 UI + 관리자 웹 UI 신규 (React/Vite)</li>
+      <li><b>Structural</b>: FastAPI 백엔드 + React 프론트 + 관계형 DB, 멀티테넌시 구조</li>
+      <li><b>Data model</b>: 신규 6개 엔티티 (Store, Menu, Table, TableSession, Order, OrderHistory)</li>
+      <li><b>API</b>: 인증·메뉴·주문·세션·SSE 엔드포인트 신규</li>
+      <li><b>NFR</b>: 보안·복원력·PBT 확장 전면 적용, SSE 실시간, JWT/bcrypt</li>
+    </ul>
+  </section>
+
+  <!-- 2. 단계 흐름 -->
+  <section>
+    <h2>2. 실행 단계 (Stages)</h2>
+
+    <div class="phase">
+      <div class="ptitle">🔵 INCEPTION PHASE</div>
+      <div class="stages">
+        <div class="stg done">Workspace Detection<span class="badge">COMPLETED</span></div>
+        <div class="stg skip">Reverse Engineering<span class="badge">SKIPPED · 그린필드</span></div>
+        <div class="stg done">Requirements Analysis<span class="badge">COMPLETED</span></div>
+        <div class="stg done">User Stories<span class="badge">COMPLETED · 33 스토리</span></div>
+        <div class="stg plan">Workflow Planning<span class="badge">진행 중</span></div>
+        <div class="stg exec">Application Design<span class="badge">EXECUTE</span></div>
+        <div class="stg exec">Units Generation<span class="badge">EXECUTE</span></div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="ptitle">🟢 CONSTRUCTION PHASE (Unit별 반복)</div>
+      <div class="stages">
+        <div class="stg exec">Functional Design<span class="badge">EXECUTE</span></div>
+        <div class="stg exec">NFR Requirements<span class="badge">EXECUTE</span></div>
+        <div class="stg exec">NFR Design<span class="badge">EXECUTE</span></div>
+        <div class="stg exec">Infrastructure Design<span class="badge">EXECUTE</span></div>
+        <div class="stg exec">Code Generation<span class="badge">EXECUTE · 항상</span></div>
+        <div class="stg exec">Build and Test<span class="badge">EXECUTE · 항상</span></div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="ptitle">🟡 OPERATIONS PHASE</div>
+      <div class="stages">
+        <div class="stg skip" style="text-decoration:none;background:#fef9c3;color:#a16207;border-color:#fde68a;">Operations<span class="badge">PLACEHOLDER</span></div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span class="lg" style="background:#dcfce7"></span>완료
+      <span class="lg" style="background:#e0f2fe"></span>진행 중
+      <span class="lg" style="background:#ffedd5"></span>실행 예정
+      <span class="lg" style="background:#e2e8f0"></span>건너뜀
+    </div>
+  </section>
+
+  <!-- 3. 작업 단위 -->
+  <section>
+    <h2>3. 잠정 작업 단위 (Units)</h2>
+    <p style="font-size:13px;color:#64748b;margin-top:0">Units Generation 단계에서 최종 확정됩니다.</p>
+    <div class="units">
+      <div class="unit"><div class="un">backend-core</div><div class="ud">FastAPI 앱, 멀티테넌시 미들웨어, 인증·로깅·헬스체크·보안 헤더</div></div>
+      <div class="unit"><div class="un">auth-session</div><div class="ud">매장 인증(JWT/bcrypt), 테이블 세션·자동 로그인</div></div>
+      <div class="unit"><div class="un">menu</div><div class="ud">메뉴 CRUD·카테고리·노출 순서</div></div>
+      <div class="unit"><div class="un">order</div><div class="ud">장바구니→주문 확정, 상태, 세션 이력, SSE 실시간</div></div>
+      <div class="unit"><div class="un">frontend-customer</div><div class="ud">고객 태블릿 UI (React/Vite)</div></div>
+      <div class="unit"><div class="un">frontend-admin</div><div class="ud">관리자 대시보드 UI (React/Vite, SSE)</div></div>
+    </div>
+  </section>
+
+  <!-- 4. 성공 기준 -->
+  <section>
+    <h2>4. 성공 기준 (Success Criteria)</h2>
+    <ul class="crit">
+      <li><b>Primary Goal</b>: 멀티테넌트 테이블오더 서비스를 로컬 docker-compose로 동작 가능하게 구현</li>
+      <li><b>Deliverables</b>: FastAPI 백엔드 · React 고객/관리자 프론트 · 관계형 DB 스키마 · SSE 실시간 · docker-compose</li>
+      <li><b>Quality Gate — 스토리</b>: 33개 사용자 스토리의 Gherkin 수용 기준 충족</li>
+      <li><b>Quality Gate — 보안</b>: SECURITY-01~15 준수 (인증·격리·입력검증·헤더)</li>
+      <li><b>Quality Gate — PBT</b>: Hypothesis 속성 테스트 — 총액/세션/격리 불변식 통과</li>
+      <li><b>Quality Gate — 복원력</b>: 헬스체크·백업·그레이스풀 디그레이드·SSE 재연결</li>
+    </ul>
+  </section>
+
+  <!-- 5. 확장 준수 -->
+  <section>
+    <h2>5. 확장 규칙 준수 (Workflow Planning 단계)</h2>
+    <table>
+      <tr><th>확장</th><th>적용 여부</th><th>판정 근거</th></tr>
+      <tr><td>Security Baseline</td><td><span class="tag t-na">N/A</span></td><td>계획 산출물에 코드/설정 없음 → CONSTRUCTION에서 강제</td></tr>
+      <tr><td>Property-Based Testing</td><td><span class="tag t-na">N/A</span></td><td>테스트 대상 코드 없음 → Functional/NFR/Code Gen에서 강제</td></tr>
+      <tr><td>Resiliency Baseline</td><td><span class="tag t-part">부분</span></td><td>위험·롤백·테스트 복잡도 평가에 반영. 세부(RES-04/08/14)는 NFR Design에서 확정</td></tr>
+    </table>
+    <p style="font-size:12.5px;color:#64748b;margin-bottom:0">계획 단계에서는 직접 코드 산출물이 없어 대부분 N/A이며(비차단), 관련 결정은 후속 단계로 명시적 전달됩니다.</p>
+  </section>
+</main>
+
+<footer>
+  기반 문서: <code>aidlc-docs/inception/plans/execution-plan.md</code> ·
+  요구사항: <code>requirements.md</code> · 스토리: <code>stories.md</code> ·
+  본 문서는 Workflow Planning 단계의 참고 요약이며 승인 게이트를 대체하지 않습니다.
+</footer>
+</body>
+</html>

@@ -1,0 +1,24 @@
+# Secrets — never commit [SEC-01]
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Backups
+backups/
+*.dump
+*.sql.gz
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

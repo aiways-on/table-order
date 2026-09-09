@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>테이블오더 — 사용자 요구사항 요약 (사용자 중심)</title>
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+    color:#1e293b;background:#f1f5f9;line-height:1.6;}
+  header{background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;padding:40px 24px;}
+  header .wrap{max-width:980px;margin:0 auto;}
+  header h1{margin:0 0 6px;font-size:27px;}
+  header p{margin:0;opacity:.92;}
+  header .sub{margin-top:14px;font-size:13px;opacity:.85;}
+  main{max-width:980px;margin:-22px auto 48px;padding:0 24px;}
+  section{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:24px 28px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+  h2{font-size:20px;margin:0 0 18px;padding-bottom:8px;border-bottom:2px solid #e2e8f0;}
+  /* personas */
+  .persona{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:680px){.persona{grid-template-columns:1fr;}}
+  .pcard{border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;background:#fafcff;}
+  .pcard.customer{border-top:4px solid #0ea5e9;}
+  .pcard.admin{border-top:4px solid #6366f1;}
+  .pcard h3{margin:0 0 4px;font-size:17px;display:flex;align-items:center;gap:8px;}
+  .pcard .role{color:#64748b;font-size:13px;margin-bottom:12px;}
+  .pcard h4{margin:12px 0 4px;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8;}
+  .pcard ul{margin:2px 0;padding-left:18px;}
+  .pcard li{font-size:13.5px;margin:3px 0;}
+  /* journey */
+  .journey{margin-bottom:22px;}
+  .journey .jtitle{font-weight:700;margin-bottom:10px;font-size:15px;}
+  .steps{display:flex;flex-wrap:wrap;align-items:stretch;gap:0;}
+  .step{flex:1 1 0;min-width:120px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;
+    padding:10px 12px;margin:4px;position:relative;}
+  .step .n{font-size:11px;font-weight:700;color:#2563eb;}
+  .step .t{font-size:13px;font-weight:600;margin:2px 0;}
+  .step .d{font-size:12px;color:#475569;}
+  .journey.admin .step{background:#eef2ff;border-color:#c7d2fe;}
+  .journey.admin .step .n{color:#6366f1;}
+  /* capability table */
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top;}
+  th{color:#64748b;font-weight:600;background:#f8fafc;}
+  .id{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#2563eb;white-space:nowrap;}
+  .tag{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:6px;margin:1px 2px;}
+  .t-sec{background:#fee2e2;color:#b91c1c;}
+  .t-res{background:#dcfce7;color:#15803d;}
+  .t-pbt{background:#ede9fe;color:#6d28d9;}
+  .t-rt{background:#cffafe;color:#0e7490;}
+  .legend{font-size:12px;color:#64748b;margin-top:10px;}
+  .note{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;font-size:13px;}
+  footer{max-width:980px;margin:0 auto 40px;padding:0 24px;color:#64748b;font-size:12px;text-align:center;}
+  code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:12px;}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>👥 테이블오더 — 사용자 요구사항 요약</h1>
+    <p>사용자 중심 관점: 페르소나 · 사용자 여정 · 사용자 대면 기능</p>
+    <div class="sub">AI-DLC INCEPTION · User Stories 단계 참고 자료 · 2026-09-07 · 페르소나 2종(고객·관리자)</div>
+  </div>
+</header>
+
+<main>
+  <!-- Personas -->
+  <section>
+    <h2>1. 페르소나 (Personas)</h2>
+    <div class="persona">
+      <div class="pcard customer">
+        <h3>🙋 고객 (Customer)</h3>
+        <div class="role">테이블에 착석해 태블릿으로 직접 주문하는 방문객</div>
+        <h4>목표</h4>
+        <ul>
+          <li>대기·호출 없이 즉시 원하는 메뉴를 주문</li>
+          <li>주문 내역과 진행 상태를 스스로 확인</li>
+        </ul>
+        <h4>특성</h4>
+        <ul>
+          <li>로그인/앱 설치 없이 바로 사용 (자동 로그인된 태블릿)</li>
+          <li>터치 기반, 다양한 연령층</li>
+        </ul>
+        <h4>페인포인트</h4>
+        <ul>
+          <li>직원 호출 대기, 복잡한 조작</li>
+          <li>내 주문이 접수됐는지 불확실</li>
+        </ul>
+      </div>
+      <div class="pcard admin">
+        <h3>🧑‍🍳 매장 관리자/운영자 (Admin)</h3>
+        <div class="role">매장을 설정·운영하고 주문을 실시간 관리하는 운영자</div>
+        <h4>목표</h4>
+        <ul>
+          <li>들어오는 주문을 실시간으로 놓치지 않고 처리</li>
+          <li>테이블·메뉴·세션을 효율적으로 관리, 인건비 절감</li>
+        </ul>
+        <h4>특성</h4>
+        <ul>
+          <li>매장 식별자 기반 인증(16h 세션)으로 관리 화면 접근</li>
+          <li>다수 테이블을 한 화면(그리드)에서 모니터링</li>
+        </ul>
+        <h4>페인포인트</h4>
+        <ul>
+          <li>신규 주문 인지 지연, 테이블별 현황 파악 어려움</li>
+          <li>세션 종료/직권 수정 등 운영 처리의 번거로움</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Journeys -->
+  <section>
+    <h2>2. 사용자 여정 (User Journeys)</h2>
+
+    <div class="journey">
+      <div class="jtitle">🙋 고객 여정</div>
+      <div class="steps">
+        <div class="step"><div class="n">STEP 1</div><div class="t">자동 로그인</div><div class="d">태블릿이 저장된 정보로 매장·테이블 세션에 자동 진입</div></div>
+        <div class="step"><div class="n">STEP 2</div><div class="t">메뉴 탐색</div><div class="d">기본 화면=메뉴, 카테고리별 카드 UI로 선택</div></div>
+        <div class="step"><div class="n">STEP 3</div><div class="t">장바구니</div><div class="d">추가/수량조절, 총액 실시간, 로컬 저장</div></div>
+        <div class="step"><div class="n">STEP 4</div><div class="t">주문 확정</div><div class="d">주문번호 표시 → 장바구니 비움 → 메뉴로 복귀</div></div>
+        <div class="step"><div class="n">STEP 5</div><div class="t">내역 확인</div><div class="d">현재 세션 주문/상태를 실시간(SSE)으로 조회</div></div>
+      </div>
+    </div>
+
+    <div class="journey admin">
+      <div class="jtitle">🧑‍🍳 관리자 여정</div>
+      <div class="steps">
+        <div class="step"><div class="n">STEP 1</div><div class="t">매장 인증</div><div class="d">매장 식별자+계정 로그인, JWT 16h 세션</div></div>
+        <div class="step"><div class="n">STEP 2</div><div class="t">실시간 모니터링</div><div class="d">테이블 그리드에서 신규 주문 2초 내 표시(SSE)</div></div>
+        <div class="step"><div class="n">STEP 3</div><div class="t">주문 처리</div><div class="d">상태 변경(대기→준비→완료), 직권 삭제</div></div>
+        <div class="step"><div class="n">STEP 4</div><div class="t">테이블/세션 관리</div><div class="d">초기 설정, 이용 완료→이력 이동·총액 리셋</div></div>
+        <div class="step"><div class="n">STEP 5</div><div class="t">메뉴 관리</div><div class="d">등록/수정/삭제/순서 조정, 과거 내역 조회</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Capabilities -->
+  <section>
+    <h2>3. 사용자 대면 기능 (User-Facing Capabilities)</h2>
+    <table>
+      <tr><th>ID</th><th>페르소나</th><th>사용자가 할 수 있는 것</th><th>연계 규칙</th></tr>
+      <tr><td class="id">FR-C1</td><td>고객</td><td>별도 로그인 없이 태블릿 자동 로그인으로 즉시 주문 시작</td><td><span class="tag t-sec">SEC</span></td></tr>
+      <tr><td class="id">FR-C2</td><td>고객</td><td>카테고리별 메뉴 탐색 및 상세(가격·설명·이미지) 확인</td><td></td></tr>
+      <tr><td class="id">FR-C3</td><td>고객</td><td>장바구니에 담고 수량 조절·총액 확인(새로고침에도 유지)</td><td><span class="tag t-pbt">PBT</span></td></tr>
+      <tr><td class="id">FR-C4</td><td>고객</td><td>주문 확정 → 주문번호 확인 → 자동 리다이렉트</td><td><span class="tag t-sec">SEC</span><span class="tag t-pbt">PBT</span></td></tr>
+      <tr><td class="id">FR-C5</td><td>고객</td><td>현재 세션의 주문·상태를 실시간으로 조회</td><td><span class="tag t-rt">RT</span></td></tr>
+      <tr><td class="id">FR-A1</td><td>관리자</td><td>매장 계정으로 안전하게 로그인(16h 세션 유지)</td><td><span class="tag t-sec">SEC</span></td></tr>
+      <tr><td class="id">FR-A2</td><td>관리자</td><td>테이블별 그리드에서 실시간 주문 모니터링·상태 변경</td><td><span class="tag t-rt">RT</span></td></tr>
+      <tr><td class="id">FR-A3</td><td>관리자</td><td>테이블 초기 설정, 주문 직권 삭제, 세션 종료(이력 이동), 과거 내역 조회</td><td><span class="tag t-pbt">PBT</span><span class="tag t-res">RES</span></td></tr>
+      <tr><td class="id">FR-A4</td><td>관리자</td><td>메뉴 등록·수정·삭제·노출 순서 조정</td><td><span class="tag t-sec">SEC</span></td></tr>
+      <tr><td class="id">FR-MT1/2</td><td>공통</td><td>모든 데이터는 매장 단위로 격리, 타 매장/테이블 데이터 접근 불가</td><td><span class="tag t-sec">SEC</span></td></tr>
+    </table>
+    <div class="legend">
+      <span class="tag t-sec">SEC</span> 보안 규칙 연계 ·
+      <span class="tag t-res">RES</span> 복원력 규칙 연계 ·
+      <span class="tag t-pbt">PBT</span> 속성 기반 테스트 대상 ·
+      <span class="tag t-rt">RT</span> 실시간(SSE)
+    </div>
+  </section>
+
+  <!-- scope note -->
+  <section>
+    <h2>4. 사용자 관점 범위 밖 (Out of Scope)</h2>
+    <div class="note">
+      고객·관리자 모두 다음은 <b>사용하지 않습니다</b>: 실제 결제/영수증/포인트, SNS·2FA 로그인, 푸시·SMS·이메일 알림,
+      주방 전달/재고, 매출 분석·리포트, 예약·리뷰·다국어, 배달/POS/지도 연동. (메뉴 이미지는 URL 참조만, 업로드 없음)
+    </div>
+  </section>
+</main>
+
+<footer>
+  기반 문서: <code>aidlc-docs/inception/requirements/requirements.md</code> ·
+  전체(기술 포함) 요약: <code>requirements-summary.html</code> ·
+  본 문서는 User Stories 단계의 사용자 중심 참고 자료입니다(스토리 확정 전 개요).
+</footer>
+</body>
+</html>

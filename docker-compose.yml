@@ -1,0 +1,89 @@
+# Table-Order local stack. [infrastructure-design / deployment-architecture]
+services:
+  db:
+    image: postgres:16
+    env_file: ./backend/.env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    image: table-order-backend:0.1.0
+    env_file: ./backend/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-net
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  frontend-admin:
+    build: ./frontend-admin
+    image: table-order-frontend-admin:0.1.0
+    ports:
+      - "5174:80"
+    depends_on:
+      - backend
+    networks:
+      - app-net
+    restart: unless-stopped
+
+  frontend-customer:
+    build: ./frontend-customer
+    image: table-order-frontend-customer:0.1.0
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - app-net
+    restart: unless-stopped
+
+  backup:
+    image: postgres:16
+    env_file: ./backend/.env
+    environment:
+      PGHOST: db
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      BACKUP_DIR: /backups
+    entrypoint: ["/bin/sh", "-c"]
+    # Simple hourly loop for demo; production would use a real scheduler. [RES-12]
+    command: >
+      "cp /scripts/backup.sh /tmp/backup.sh && chmod +x /tmp/backup.sh &&
+       while true; do /tmp/backup.sh || echo 'backup failed'; sleep 3600; done"
+    volumes:
+      - ./backend/scripts:/scripts:ro
+      - backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-net
+    restart: unless-stopped
+
+networks:
+  app-net:
+    driver: bridge
+
+volumes:
+  pgdata:
+  backups:
